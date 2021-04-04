@@ -1,0 +1,20 @@
+Header Set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Headers: "Content-Type, Authorization"
+
+php_flag display_errors on
+SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteRule ^search(.*)$ controllers/search.php [L]
+RewriteRule ^songs(.*)$ controllers/song.php [L]
+RewriteRule ^artists(.*)$ controllers/artist.php [L]
+RewriteRule ^albums(.*)$ controllers/album.php [L]
+RewriteRule ^playlists(.*)$ controllers/playlist.php [L]
+RewriteRule ^users(.*)$ controllers/user.php [L]
+RewriteRule ^sessions(.*)$ controllers/session.php [L]
+
+RewriteCond %{REQUEST_URI} ^/404/$
+RewriteRule ^(.*)$ controllers/404.php [L]
