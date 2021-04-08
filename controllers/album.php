@@ -97,6 +97,21 @@ $router->get("v1/albums", function($urlParams) {
     }
 });
 
+$router->post("v1/albums/plays", function($urlParams, $postData) {
+    try {
+        $album = new Album($postData->albumId);
+        if($album->incPlays()) {
+            $response = new Res(true, 201, '');
+        }
+    }
+    catch(ArtistException $err) {
+        $response = new Res(false, $err->getCode(), $err->getMessage());  
+    }
+    catch(PDOException $err) {
+        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');                
+    }
+});
+
 $router->upload("v1/albums/images", function($urlParams) {
     try {
         if(array_key_exists('album_img', $_FILES)){

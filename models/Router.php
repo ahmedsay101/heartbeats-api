@@ -11,11 +11,7 @@ class Router {
         ),
         'v1/users/<id>/plays' => array(
             'regex' => '#/v1/users/(\\d+)/plays/?$#',
-            'methods' => array('GET')
-        ),
-        'v1/users/<id>/artists' => array(
-            'regex' => '#/v1/users/(\\d+)/artists/?$#',
-            'methods' => array('GET')
+            'methods' => array('GET', 'POST')
         ),
         'v1/users/<id>/likes' => array(
             'regex' => '#/v1/users/(\\d+)/likes/?$#',
@@ -28,6 +24,14 @@ class Router {
         'v1/users/<id>/playlists' => array(
             'regex' => '#/v1/users/(\\d+)/playlists/?$#',
             'methods' => array('GET')
+        ),
+        'v1/users/<id>/artists' => array(
+            'regex' => '#/v1/users/(\\d+)/artists/?$#',
+            'methods' => array('GET', 'POST')
+        ),
+        'v1/users/<id>/artists/<artistId>' => array(
+            'regex' => '#/v1/users/(\\d+)/artists/(\\d+)/?$#',
+            'methods' => array('DELETE')
         ),
         'v1/users' => array(
             'regex' => '#/v1/users/?$#',
@@ -44,10 +48,6 @@ class Router {
         'v1/users/<id>/uploads/<songId>' => array(
             'regex' => '#/v1/users/(\\d+)/uploads/(\\d+)/?$#',
             'methods' => array('GET', 'DELETE')
-        ),
-        'v1/users/<id>/uploads/temp/<tempId>' => array(
-            'regex' => '#/v1/users/(\\d+)/uploads/temp/(\\d+)/?$#',
-            'methods' => array('DELETE')
         ),
         'v1/sessions' => array(
             'regex' => '#/v1/sessions/?$#',
@@ -101,6 +101,10 @@ class Router {
             'regex' => '#/v1/artists/(\\d+)/albums/?$#',
             'methods' => array('GET')
         ),
+        'v1/artists/plays' => array(
+            'regex' => '#/v1/artists/plays/?$#',
+            'methods' => array('POST')
+        ),
         'v1/artists' => array(
             'regex' => '#/v1/artists/?$#',
             'methods' => array('POST', 'GET')
@@ -112,6 +116,10 @@ class Router {
         'v1/albums/<id>/songs' => array(
             'regex' => '#/v1/albums/(\\d+)/songs/?$#',
             'methods' => array('GET')
+        ),
+        'v1/albums/plays' => array(
+            'regex' => '#/v1/albums/plays/?$#',
+            'methods' => array('POST')
         ),
         'v1/albums' => array(
             'regex' => '#/v1/albums/?$#',

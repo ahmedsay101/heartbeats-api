@@ -151,47 +151,63 @@ class User {
         return $this->mainData;
     }
 
-    public function getLastPlayed() {
-        $query = $this->con->prepare("SELECT last_plays, last_playlist, playing_uploads FROM users WHERE id=:id");
-        $query->bindParam(":id", $this->id);
-        $query->execute();
+    public function setPlays($data) {
+        $findSimilarQuery = $this->con->prepare("SELECT id FROM plays WHERE user_id=:uid AND song_id = :sid");
+        $findSimilarQuery->bindParam(":uid", $this->id);
+        $findSimilarQuery->bindParam(":sid", $data->id);
+        $findSimilarQuery->execute();
 
-        if($query->rowCount() === 0) {
+        if($findSimilarQuery->rowCount() !== 0) {
+            $deleteQuery = $this->con->prepare("DELETE FROM plays WHERE user_id=:uid AND song_id = :sid");
+            $deleteQuery->bindParam(":uid", $this->id);
+            $deleteQuery->bindParam(":sid", $data->id);
+            $deleteQuery->execute();
+        }
+
+        $query = $this->con->prepare("INSERT INTO plays (user_id, song_id, from_uploads) VALUES (:uid, :sid, :up)");
+        $query->bindParam(":uid", $this->id);
+        $query->bindParam(":sid", $data->id);
+        $query->bindParam(":up", $data->uploads);
+        return $query->execute();
+    }
+
+    public function getLastPlayed() {
+        $lastPlayed = array();
+
+        $lastPlaylistQuery = $this->con->prepare("SELECT last_playlist FROM users WHERE id=:id");
+        $lastPlaylistQuery->bindParam(":id", $this->id);
+        $lastPlaylistQuery->execute();
+
+        if($lastPlaylistQuery->rowCount() === 0) {
             throw new UserException("User Not Found", 404);
         }
 
-        $sqlData = $query->fetch(PDO::FETCH_ASSOC);
-        $lastPlayed = array();
-        $lastPlayed["songs"] = array();
-        $lastPlayed["playlist"] = explode(",", $sqlData["last_playlist"]);
-        $lastPlayed["uploads"] = ($sqlData["playing_uploads"] == 0 ? false : true);
+        $lastPlaylistSqlData = $lastPlaylistQuery->fetch(PDO::FETCH_ASSOC);
+        $lastPlayed["playlist"] = explode(",", $lastPlaylistSqlData["last_playlist"]);
 
-        foreach(explode(",", $sqlData["last_plays"]) as $songId) {
-            $song = new Song($songId);
+        $lastSongsQuery = $this->con->prepare("SELECT * FROM plays WHERE user_id=:id ORDER BY time_played DESC LIMIT 8");
+        $lastSongsQuery->bindParam(":id", $this->id);
+        $lastSongsQuery->execute();
+
+
+        $songs = array();
+        while($lastSongsSqlData = $lastSongsQuery->fetch(PDO::FETCH_ASSOC)) {
+            array_push($songs, array(
+                "id" => $lastSongsSqlData["song_id"],
+                "uploads" =>  $lastSongsSqlData["from_uploads"] == 0 ? false : true
+            ));
+        }
+
+        $lastPlayed["uploads"] = $songs[0]["uploads"];
+        $lastPlayed["songs"] = array();
+        foreach($songs as $song) {
+            $song = new Song($song["id"]);
             array_push($lastPlayed["songs"], $song->findById());
         }
 
         return $lastPlayed;
     }
-    public function getFollowedArtists() {
-        $query = $this->con->prepare("SELECT artist_id FROM artist_followers WHERE user_id = :id");
-        $query->bindParam(":id", $this->id);
-        $query->execute();
 
-        if($query->rowCount() === 0) {
-            throw new UserException("User doesn't follow any artists", 404);
-        }
-
-        $sqlData = $query->fetchAll(PDO::FETCH_COLUMN);
-        $artists = array();
-
-        foreach($sqlData as $artist) {
-            $artistInstance = new Artist($artist);
-            $artists[] = $artistInstance->findById();
-        }
-
-        return $artists;
-    }
     private static function fullPath($url) {
         $httpOrHttps = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https":"http");
         $host = $_SERVER["HTTP_HOST"];
@@ -233,11 +249,8 @@ class User {
         if(isset($updateData->imgPath)) {
             $willChange["user_img"] = $updateData->imgPath;
         }
-        if(isset($updateData->lastPlays)) {
-            $willChange["last_plays"] = $updateData->lastPlays;
-        }
         if(isset($updateData->lastPlaylist)) {
-            $willChange["lastPlaylist"] = implode(",", $updateData->lastPlaylist);
+            $willChange["last_playlist"] = implode(",", $updateData->lastPlaylist);
         }
 
         if(empty($willChange)) {
@@ -300,14 +313,70 @@ class User {
 
         $playlistIds = $query->fetchAll(PDO::FETCH_COLUMN);
 
-        $this->playlists = array();
+        $playlists = array();
 
         foreach($playlistIds as $id) {
             $playlist = new Playlist($id);
-            $this->playlists[] = $playlist->findById();
+            $playlists[] = $playlist->findById();
         }
 
-        return $this->playlists;
+        return $playlists;
+    }
+
+    public function getArtists() {
+        $query = $this->con->prepare("SELECT artist_id FROM artist_followers WHERE user_id = :id");
+        $query->bindParam(":id", $this->id);
+        $query->execute();
+
+        if($query->rowCount() === 0) {
+            throw new UserException("This user doesn't follow any artists", 204);
+            exit;
+        }
+
+        $artistIds = $query->fetchAll(PDO::FETCH_COLUMN);
+
+        $artists = array();
+
+        foreach($artistIds as $id) {
+            $artist = new Artist($id);
+            $artists[] = $artist->findById();
+        }
+
+        return $artists;
+    }
+
+    public function follow($id) {
+        $conflictQuery = $this->con->prepare("SELECT id FROM artist_followers WHERE user_id=:uid AND artist_id=:aid");
+        $conflictQuery->bindParam(":uid", $this->id);
+        $conflictQuery->bindParam(":aid", $id);
+        $conflictQuery->execute();
+
+        if($conflictQuery->rowCount() !== 0) {
+            throw new UserException("You're already following this artist", 409);
+            exit;
+        }
+
+        $query = $this->con->prepare("INSERT INTO artist_followers (user_id, artist_id) VALUES (:uid, :aid)");
+        $query->bindParam(":uid", $this->id);
+        $query->bindParam(":aid", $id);
+        return $query->execute();
+    }
+
+    public function unfollow($id) {
+        $conflictQuery = $this->con->prepare("SELECT id FROM artist_followers WHERE user_id=:uid AND artist_id=:aid");
+        $conflictQuery->bindParam(":uid", $this->id);
+        $conflictQuery->bindParam(":aid", $id);
+        $conflictQuery->execute();
+
+        if($conflictQuery->rowCount() === 0) {
+            throw new UserException("You're not following this artist", 404);
+            exit;
+        }
+
+        $query = $this->con->prepare("DELETE FROM artist_followers WHERE user_id=:uid AND artist_id=:aid");
+        $query->bindParam(":uid", $this->id);
+        $query->bindParam(":aid", $id);
+        return $query->execute();
     }
 
     public function getLikesIds() {

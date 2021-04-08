@@ -165,12 +165,12 @@ $router->get("v1/users/<id>/plays", function($urlParams) {
     } 
 });
 
-$router->get("v1/users/<id>/artists", function($urlParams) {
+$router->post("v1/users/<id>/plays", function($urlParams, $postData) {
     $userId = $urlParams[1];
     try {
         $user = Router::authenticate($userId)->user;
-        $getFollowedArtists = $user->getFollowedArtists();
-        $response = new Res(true, 200, '', $getFollowedArtists);
+        $setPlaylistData = $user->setPlays($postData);
+        $response = new Res(true, 201, '');
     }  
     catch(UserException $err) {
         $response = new Res(false, $err->getCode(), $err->getMessage());  
@@ -203,7 +203,7 @@ $router->post("v1/users/<id>/likes", function($urlParams, $postData) {
             $response = new Res(true, 200, 'You Already Liked This Song');         
         }
         $user->like($postData->songId);
-        $response = new Res(true, 200, 'Song Liked'); 
+        $response = new Res(true, 201, 'Song Liked'); 
     }  
     catch(UserException $err) {
         $response = new Res(false, $err->getCode(), $err->getMessage());  
@@ -259,6 +259,55 @@ $router->get("v1/users/<id>/playlists", function($urlParams) {
         $user = Router::authenticate($userId)->user;
         $getPlaylists = $user->getPlaylists();
         $response = new Res(true, 200, '', $getPlaylists);         
+    }
+
+    catch(UserException $err) {
+        $response = new Res(false, $err->getCode(), $err->getMessage());  
+    }
+    catch(PDOException $err) {
+        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');                               
+    }  
+});
+
+
+$router->post("v1/users/<id>/artists", function($urlParams, $postData) {
+    $userId = $urlParams[1];
+    try {
+        $user = Router::authenticate($userId)->user;
+        $user->follow($postData->artistId);
+        $response = new Res(true, 201, 'Artist Followed'); 
+    }  
+    catch(UserException $err) {
+        $response = new Res(false, $err->getCode(), $err->getMessage());  
+    }
+    catch(PDOException $err) {
+        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');         
+    } 
+});
+
+$router->delete("v1/users/<id>/artists/<artistId>", function($urlParams) {
+    $userId = $urlParams[1];
+    $artistId = $urlParams[2];
+
+    try {
+        $user = Router::authenticate($userId)->user;
+        $user->unfollow($artistId);
+        $response = new Res(true, 200, 'Artist unfollowed'); 
+    }  
+    catch(UserException $err) {
+        $response = new Res(false, $err->getCode(), $err->getMessage());  
+    }
+    catch(PDOException $err) {
+        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');         
+    } 
+});
+
+$router->get("v1/users/<id>/artists", function($urlParams) {
+    $userId = $urlParams[1];
+    try {
+        $user = Router::authenticate($userId)->user;
+        $getArtists = $user->getArtists();
+        $response = new Res(true, 200, '', $getArtists);         
     }
 
     catch(UserException $err) {

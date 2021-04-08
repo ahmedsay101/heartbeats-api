@@ -210,5 +210,11 @@ class Artist {
         
         return $artistAlbums;
     }
+
+    public function incPlays() {
+        $query = $this->con->prepare("UPDATE artists SET artist_plays = artist_plays + 1 WHERE id = :id");
+        $query->bindParam(":id", $this->id);
+        return $query->execute();
+    }
 }
 ?>

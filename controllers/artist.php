@@ -100,6 +100,21 @@ $router->post("v1/artists", function($urlParams, $postData) {
     }
 });
 
+$router->post("v1/artists/plays", function($urlParams, $postData) {
+    try {
+        $artist = new Artist($postData->artistId);
+        if($artist->incPlays()) {
+            $response = new Res(true, 201, '');
+        }
+    }
+    catch(ArtistException $err) {
+        $response = new Res(false, $err->getCode(), $err->getMessage());  
+    }
+    catch(PDOException $err) {
+        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');                
+    }
+});
+
 $router->get("v1/artists", function($urlParams) {
     try {
         $getArtists = Artist::getAll();

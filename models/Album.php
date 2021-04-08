@@ -208,6 +208,12 @@ class Album {
 
         return $albumSongs;
     }
+
+    public function incPlays() {
+        $query = $this->con->prepare("UPDATE albums SET plays = plays + 1 WHERE id = :id");
+        $query->bindParam(":id", $this->id);
+        return $query->execute();
+    }
 }
 
 ?>
