@@ -39,10 +39,10 @@ class Playlist {
         $this->playlistData = array();
         $this->playlistData["id"] = $this->id;
         $this->playlistData["name"] = $sqlData["playlist_name"];
-        $this->playlistData["imgUrl"] = $sqlData["playlist_img_url"];
         $this->playlistData["userId"] = $userId;
         $this->playlistData["userName"] = $sqlData["first_name"] . " " . $sqlData["last_name"];
         $this->playlistData["songIds"] = $sqlData['playlist_song_ids'] == null ? null : explode(",", $sqlData["playlist_song_ids"]);
+        $this->playlistData["imgUrl"] = $this->getPlaylistImg($this->playlistData["songIds"]);
         $this->playlistData["numOfSongs"] = count(explode(",", $sqlData["playlist_song_ids"]));
 
         $creationDate = strtotime($sqlData["creation_date"]);
@@ -82,6 +82,16 @@ class Playlist {
             $playlists[] = $playlistData;
         }
         return $playlists;
+    }
+
+    public function getPlaylistImg($songs) {
+        if($songs === null) {
+            return self::fullPath('/heartbeats/assets/images/playlist.svg');
+        }
+        else {
+            $song = new Song($songs[0]);
+            return $song->findById()["imgUrl"];
+        }
     }
 
     private static function getSongImgColor($id) {
@@ -193,10 +203,9 @@ class Playlist {
         foreach ($willChange as $key => &$value) {
             $updateQuery->bindParam(":".$key, $value, PDO::PARAM_STR);
         }
+        $updateQuery->execute();
 
-        if($updateQuery->execute()) {
-            return $playlist;
-        }
+        return $this->findById();
     }
 
     public function delete() {

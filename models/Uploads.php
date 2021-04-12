@@ -100,12 +100,12 @@ class Uploads {
 
         $deleteQuery = $this->con->prepare("DELETE FROM uploads WHERE id = :id AND user_id=:uid");
         $deleteQuery->bindParam(":id", $id);
-        $query->bindParam(":uid", $this->userId);
+        $deleteQuery->bindParam(":uid", $this->userId);
         return $deleteQuery->execute();
     }
 
     public function deleteSong($path) {
-        unlink($_SERVER['DOCUMENT_ROOT'].$path);
+        unlink($path);
     }
 
     public function upload($file) {

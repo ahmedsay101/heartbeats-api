@@ -81,7 +81,7 @@ $router->delete("v1/users/<id>/uploads/<songId>", function($urlParams) {
         $user = Router::authenticate($userId)->user;
         $uploads = new Uploads($userId);
         if($uploads->delete($songId)) {
-            $response = new Res(true, 200, 'Your account is gone');
+            $response = new Res(true, 200, '');
         }
         else {
             $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');         
@@ -115,23 +115,6 @@ $router->get("v1/users/<id>/uploads", function($urlParams) {
     }
 });
 
-$router->delete("v1/users/<id>/uploads/temp/<tempId>", function($urlParams) {
-    $userId = $urlParams[1];
-    $tempId = $urlParams[2];
-
-    try {
-        $user = Router::authenticate($userId)->user;
-        $uploads = new Uploads($userId);
-        $songData = $uploads->deleteTemp($tempId);
-        $response = new Res(true, 201, 'Temporary Upload Has Been Deleted Successfully');
-    }
-    catch(UserException $err) {
-        $response = new Res(false, $err->getCode(), $err->getMessage());  
-    }
-    catch(PDOException $err) {
-        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');                
-    }
-});
 
 $router->upload("v1/users/<id>/uploads", function($urlParams) {
     $userId = $urlParams[1];

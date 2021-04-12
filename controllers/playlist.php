@@ -28,7 +28,7 @@ $router->patch("v1/playlists/<id>", function($urlParams, $updateData) {
         $playlist = new Playlist($playlistId);
         if($playlist->getUserId() != Router::authenticate()->session->getUserId()) $response = new Res(false, 401, "Unauthorized");
         $updatePlaylist = $playlist->update($updateData);
-        $response = new Res(true, 200, 'Playlist Updated', $updateData);
+        $response = new Res(true, 200, 'Playlist Updated', $updatePlaylist);
     }
     catch(PlaylistException $err) {
         $response = new Res(false, $err->getCode(), $err->getMessage());  

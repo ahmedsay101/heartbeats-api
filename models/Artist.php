@@ -161,7 +161,7 @@ class Artist {
     }
 
     public function getSongIds() {
-        $query = $this->con->prepare("SELECT id FROM songs WHERE artist_id = :id ORDER BY RAND()");
+        $query = $this->con->prepare("SELECT id FROM songs WHERE artist_id = :id");
         $query->bindParam(":id", $this->id);
         $query->execute();
 
