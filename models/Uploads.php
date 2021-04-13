@@ -26,7 +26,7 @@ class Uploads {
         $query->execute();
 
         if($query->rowCount() === 0) {
-            throw new UploadsException ("You don't have uploaded songs", 404);
+            throw new UploadsException ("You don't have uploaded songs", 204);
             exit;
         }
         return $idsArray = $query->fetchAll(PDO::FETCH_COLUMN, 0);
