@@ -13,12 +13,6 @@ class DB {
     } 
 }
 
-try {
-    DB::connect();
-}
-catch (PDOException $error) {
-    echo "Connection Failed" . $error->getMessage();
-
-}
+DB::connect();
 
 ?>

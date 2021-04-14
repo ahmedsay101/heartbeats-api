@@ -20,7 +20,7 @@ class Uploads {
         return $uploadsArray;
     }
 
-    private function getIds() {
+    public function getIds() {
         $query = $this->con->prepare("SELECT id FROM uploads WHERE user_id = :id ORDER BY uploaded_at DESC");
         $query->bindParam(":id", $this->userId);
         $query->execute();
@@ -39,7 +39,7 @@ class Uploads {
         $query->execute();
 
         if($query->rowCount() === 0) {
-            throw new UploadsException("Song Not Found", 404);
+            throw new UploadsException("Song Not Found " . $id . "", 404);
             exit;
         }
 
@@ -101,7 +101,12 @@ class Uploads {
         $deleteQuery = $this->con->prepare("DELETE FROM uploads WHERE id = :id AND user_id=:uid");
         $deleteQuery->bindParam(":id", $id);
         $deleteQuery->bindParam(":uid", $this->userId);
-        return $deleteQuery->execute();
+        $deleteQuery->execute();
+
+        $deleteFromPlays = $this->con->prepare("DELETE FROM plays WHERE song_id=:id AND user_id=:uid AND from_uploads='1'");
+        $deleteFromPlays->bindParam(":id", $id);
+        $deleteFromPlays->bindParam(":uid", $this->userId);
+        return $deleteFromPlays->execute();
     }
 
     public function deleteSong($path) {

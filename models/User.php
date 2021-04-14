@@ -1,6 +1,7 @@
 <?php 
 require_once("../controllers/config.php");
 require_once("Song.php");
+require_once("Uploads.php");
 require_once("Artist.php");
 require_once("Playlist.php");
 require_once("Session.php");
@@ -25,7 +26,7 @@ class User {
         }
 
         if(!isset($data->imgPath)) {
-            $data->imgPath = "/heartbeats/assets/images/users/user-default.png"; 
+            $data->imgPath = "/heartbeats/assets/images/users/user-default.svg"; 
         }
 
         $data->firstName = self::validateFirstName($data->firstName);
@@ -183,7 +184,6 @@ class User {
         }
 
         $lastPlaylistSqlData = $lastPlaylistQuery->fetch(PDO::FETCH_ASSOC);
-        $lastPlayed["playlist"] = explode(",", $lastPlaylistSqlData["last_playlist"]);
 
         $lastSongsQuery = $this->con->prepare("SELECT * FROM plays WHERE user_id=:id ORDER BY time_played DESC LIMIT 8");
         $lastSongsQuery->bindParam(":id", $this->id);
@@ -198,14 +198,44 @@ class User {
             ));
         }
 
-        $lastPlayed["uploads"] = $songs[0]["uploads"];
-        $lastPlayed["songs"] = array();
-        foreach($songs as $song) {
-            $song = new Song($song["id"]);
-            array_push($lastPlayed["songs"], $song->findById());
+        if($songs[0]["uploads"]) {
+            $lastPlayed["playlist"] = $this->getPlaylistFromUploads();
+        }
+        else {
+            $lastPlayed["playlist"] = explode(",", $lastPlaylistSqlData["last_playlist"]);
         }
 
+        $lastPlayed["songs"] = array();
+        foreach($songs as $song) {
+            if($song["uploads"]) {
+                $uploads = new Uploads($this->id);
+                array_push($lastPlayed["songs"], array(
+                    "fromUploads" => true,
+                    "song" => $uploads->findById($song["id"])
+                ));
+            }
+            else {
+                $songInstance = new Song($song["id"]);
+                array_push($lastPlayed["songs"], array(
+                    "fromUploads" => false,
+                    "song" => $songInstance->findById())
+                );
+            }
+        }
+    
         return $lastPlayed;
+    }
+
+    private function getPlaylistFromUploads() {
+        $uploads = new Uploads($this->id);
+        return $uploads->getIds();
+    }
+
+    public function deleteLastPlayed($id) {
+        $lastPlaylistQuery = $this->con->prepare("DELETE FROM plays WHERE id=:id AND user_id=:uid AND from_uploads='1'");
+        $lastPlaylistQuery->bindParam(":id", $id);
+        $lastPlaylistQuery->bindParam(":uid", $this->id);
+        return $lastPlaylistQuery->execute();
     }
 
     private static function fullPath($url) {
