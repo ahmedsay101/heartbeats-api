@@ -1,4 +1,6 @@
 <?php
+require_once("../models/Res.php");
+
 ob_start();
 session_start();
 date_default_timezone_set("Africa/Cairo");
@@ -13,6 +15,11 @@ class DB {
     } 
 }
 
-DB::connect();
+try {
+    DB::connect();
+}
+catch (PDOException $e) {
+    $response = new Res(false, 500, 'Something went wrong, Please try again later');
+}
 
 ?>

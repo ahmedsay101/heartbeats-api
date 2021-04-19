@@ -75,7 +75,7 @@ class Playlist {
                 $songData = array();
                 $song = new Song($id);
                 $songData = $song->findById();
-                $songData["imgColor"] = self::getSongImgColor($id);
+                $songData["imgColor"] = self::getSongImgColor($songData["imgUrl"]);
                 $songs[] = $songData;
             }
             $playlistData["songs"] = $songs;
@@ -94,10 +94,10 @@ class Playlist {
         }
     }
 
-    private static function getSongImgColor($id) {
+    private static function getSongImgColor($url) {
         $con = DB::connect();
-        $query = $con->prepare("SELECT color FROM song_img_color WHERE song_id = :id");
-        $query->bindParam(":id", $id);
+        $query = $con->prepare("SELECT color FROM song_img_color WHERE song_url = :u");
+        $query->bindParam(":u", $url);
         $query->execute();
 
         return $color = $query->fetchColumn(); 
