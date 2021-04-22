@@ -114,7 +114,7 @@ class Song {
                     $songData["isLiked"] = true;
                 }
             }
-            catch(AuthException) {
+            catch(AuthException $err) {
                     $songData["isLiked"] = false;
             }
             $searchResults[] = $songData;
@@ -125,7 +125,7 @@ class Song {
     private static function fullPath($url) {
         $httpOrHttps = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https":"http");
         $host = $_SERVER["HTTP_HOST"];
-        return $path = $httpOrHttps."://".$host.$url;
+        return $path = "https://cors-everywhere-me.herokuapp.com/".$httpOrHttps."://".$host.$url;
     }
 
     public static function generateRandomPlaylist() {

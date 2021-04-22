@@ -95,9 +95,10 @@ class Playlist {
     }
 
     private static function getSongImgColor($url) {
+        $fullPath = self::fullPath($url);
         $con = DB::connect();
         $query = $con->prepare("SELECT color FROM song_img_color WHERE song_url = :u");
-        $query->bindParam(":u", $url);
+        $query->bindParam(":u", $fullPath);
         $query->execute();
 
         return $color = $query->fetchColumn(); 
@@ -137,7 +138,7 @@ class Playlist {
             'name' => $playlistData->name,
             'imgUrl' => $playlistData->imgUrl,
             'userId' => $userId,
-            'date' => date('Y/m/d h:i:s a', time())
+            'date' => date('Y/m/d h:i:s', time())
         ]);
 
         return (new self($con->lastInsertId()))->findById();
@@ -146,7 +147,7 @@ class Playlist {
     private static function fullPath($url) {
         $httpOrHttps = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https":"http");
         $host = $_SERVER["HTTP_HOST"];
-        return $path = $httpOrHttps."://".$host.$url;
+        return $path = "https://cors-everywhere-me.herokuapp.com/".$httpOrHttps."://".$host.$url;
     }
 
     public function update($updateData) {

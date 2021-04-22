@@ -17,4 +17,4 @@ RewriteRule ^users(.*)$ controllers/user.php [L]
 RewriteRule ^sessions(.*)$ controllers/session.php [L]
 
 RewriteCond %{REQUEST_URI} ^/404/$
-RewriteRule ^(.*)$ controllers/404.php [L]
+RewriteRule ^(.*)$ v1/controllers/404.php [L]

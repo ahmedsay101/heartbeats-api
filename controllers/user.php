@@ -39,22 +39,6 @@ $router->patch("v1/users/<id>", function($urlParams, $updateData) {
     } 
 });
 
-$router->delete("v1/users/<id>", function($urlParams) {
-    $userId = $urlParams[1];
-
-    try {
-        $user = Router::authenticate($userId)->user;
-        $user->delete();
-        $response = new Res(true, 200, 'Your account is gone');
-    }  
-    catch(UserException $err) {
-        $response = new Res(false, $err->getCode(), $err->getMessage());  
-    }
-    catch(PDOException $err) {
-        $response = new Res(false, 500, 'Something Went Wrong, Please Try Again Later');         
-    } 
-});
-
 $router->get("v1/users/<id>/uploads/<songId>", function($urlParams) {
     $userId = $urlParams[1];
     $songId = $urlParams[2];

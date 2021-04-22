@@ -65,14 +65,14 @@ class Uploads {
     private static function fullPath($url) {
         $httpOrHttps = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https":"http");
         $host = $_SERVER["HTTP_HOST"];
-        return $path = $httpOrHttps."://".$host.$url;
+        return $path = "https://cors-everywhere-me.herokuapp.com/".$httpOrHttps."://".$host.$url;
     }
     
     public function create($data) {
         $query = $this->con->prepare("INSERT INTO uploads (name, url, path, user_id, uploaded_at)
         VALUES (:name, :url, :path, :id, :at)");
 
-        $date = date('Y/m/d h:i:s a', time());
+        $date = date('Y-m-d H:i:s', time());
         $query->bindParam(":name", $data["name"]);
         $query->bindParam(":url", $data["url"]);
         $query->bindParam(":path", $data["path"]);

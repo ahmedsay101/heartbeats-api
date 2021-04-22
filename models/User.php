@@ -37,29 +37,21 @@ class User {
         $query = $con->prepare("INSERT INTO users (`first_name`, `last_name`, `email`, `password`, `user_img`, `join_date`, `role`)
         VALUES (:fn, :ln, :em, :pw, :img, :date, :role)");
 
-        if($query->execute([
+        $time = date('Y/m/d h:i:s', time());
+
+        $query->execute([
             'fn' => $data->firstName,
             'ln' => $data->lastName,
             'em' => $data->email,
             'pw' => $data->hashedPassword,
             'img' => $data->imgPath,
-            'date' => date('Y/m/d h:i:s', time()),
+            'date' => $time,
             'role' => "client"
-        ])) {
-            $resData["user"] = array(
-                "id" => $con->lastInsertId(),
-                "firstName" => $data->firstName,
-                "lastName" => $data->lastName,
-                "email" => $data->email,
-                "imgPath" => $data->imgPath
-            );
-            $resData["session"] = Session::create($con->lastInsertId());
-            return $resData;
-        }
-        else {
-            throw new UserException("Something went wrong while creating your account, Please try again later", 500);
-            exit; 
-        }
+        ]);
+
+        $resData["user"] = (new self($con->lastInsertId()))->getData();
+        $resData["session"] = Session::create($con->lastInsertId());
+        return $resData;
     }
 
     public static function login($data) {
@@ -165,10 +157,14 @@ class User {
             $deleteQuery->execute();
         }
 
-        $query = $this->con->prepare("INSERT INTO plays (user_id, song_id, from_uploads) VALUES (:uid, :sid, :up)");
+
+        $query = $this->con->prepare("INSERT INTO plays (user_id, song_id, from_uploads, time_played) VALUES (:uid, :sid, :up, :t)");
+        $fromUploads = $data->uploads ? 1 : 0;
+        $time = date('Y-m-d H:i:s', time());
         $query->bindParam(":uid", $this->id);
         $query->bindParam(":sid", $data->id);
-        $query->bindParam(":up", $data->uploads);
+        $query->bindParam(":up", $fromUploads);
+        $query->bindParam(":t", $time);
         return $query->execute();
     }
 
@@ -241,7 +237,7 @@ class User {
     private static function fullPath($url) {
         $httpOrHttps = (isset($_SERVER["HTTPS"]) && $_SERVER["HTTPS"] === "on" ? "https":"http");
         $host = $_SERVER["HTTP_HOST"];
-        return $path = $httpOrHttps."://".$host.$url;
+        return $path = "https://cors-everywhere-me.herokuapp.com/".$httpOrHttps."://".$host.$url;
     }
 
     public function getRole() {
@@ -307,28 +303,6 @@ class User {
         if($updateQuery->execute()) {
             return $this->getData();
         }
-    }
-
-    public function delete() {
-        $query = $this->con->prepare("DELETE FROM users WHERE user_id = :id");
-        $query->bindParam(":id", $this->id);
-        if($query->execute()) {
-            $query = $this->con->prepare("DELETE FROM sessions WHERE user_id = :id");
-            $query->bindParam(":id", $this->id);
-            return $query->execute();
-            /*$query = $this->con->prepare("DELETE FROM likes WHERE user_id = :id");
-            $query->bindParam(":id", $this->id);
-            if($query->execute()) {
-                $query = $this->con->prepare("DELETE FROM playlists WHERE user_id = :id");
-                $query->bindParam(":id", $this->id);
-            }
-            if($query->execute()) {
-                $query = $this->con->prepare("DELETE FROM users WHERE user_id = :id");
-                $query->bindParam(":id", $this->id);
-                return $query->execute();
-            }*/
-        }
-        
     }
 
     public function getPlaylists() {
