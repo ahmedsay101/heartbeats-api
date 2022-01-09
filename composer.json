@@ -1,1 +1,9 @@
-
+{
+    "authors": [
+        {
+            "name": "Ahmed Elsayed",
+            "email": "ahmedsay101@gmail.com",
+            "role": "Developer"
+        }
+    ]
+}
